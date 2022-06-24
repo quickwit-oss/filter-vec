@@ -37,24 +37,24 @@ unsafe fn filter_vec_avx2_aux(
     output: *mut u32,
     num_words: usize,
 ) -> usize {
-    let mut output_len = 0;
+    let mut output_tail = output;
     let range_simd = set1(*range.start() as i32)..=set1(*range.end() as i32);
-    let mut docs = from_u32x8([0, 1, 2, 3, 4, 5, 6, 7]);
+    let mut ids = from_u32x8([0, 1, 2, 3, 4, 5, 6, 7]);
     const SHIFT: __m256i = from_u32x8([NUM_LANES as u32; NUM_LANES]);
     for _ in 0..num_words {
         let word = load_unaligned(input);
-        let mask = is_between(word, range_simd.clone());
-        let added_len = mask.count_ones();
-        let filtered_doc_ids = compact(docs, mask);
+        let keeper_bitset = compute_filter_bitset(word, range_simd.clone());
+        let added_len = keeper_bitset.count_ones();
+        let filtered_doc_ids = compact(ids, keeper_bitset);
         store_unaligned(
-            output.offset(output_len as isize) as *mut __m256i,
+            output_tail as *mut __m256i,
             filtered_doc_ids,
         );
-        output_len += added_len as usize;
-        docs = op_add(docs, SHIFT);
+        output_tail = output_tail.offset(added_len as isize);
+        ids = op_add(ids, SHIFT);
         input = input.offset(1);
     }
-    output_len
+    output_tail.offset_from(output) as usize
 }
 
 #[inline]
@@ -64,7 +64,7 @@ unsafe fn compact(data: DataType, mask: u8) -> DataType {
 }
 
 #[inline]
-unsafe fn is_between(val: __m256i, range: std::ops::RangeInclusive<__m256i>) -> u8 {
+unsafe fn compute_filter_bitset(val: __m256i, range: std::ops::RangeInclusive<__m256i>) -> u8 {
     let too_low = op_greater(*range.start(), val);
     let too_high = op_greater(val,*range.end());
     let inside = op_or(too_low, too_high);

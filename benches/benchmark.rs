@@ -8,7 +8,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     let mut output = Vec::with_capacity(input.len());
     group.throughput(Throughput::Elements(input.len() as u64));
     group.bench_function("avx2", |b| b.iter(|| filter_vec::avx2::filter_vec(&input, 4..=12, &mut output)));
-    group.bench_function("avx512", |b| b.iter(|| filter_vec::avx512::filter_vec(&input, 4..=12, &mut output)));
+    // group.bench_function("avx512", |b| b.iter(|| filter_vec::avx512::filter_vec(&input, 4..=12, &mut output)));
     group.bench_function("scalar_iterator", |b| b.iter(|| filter_vec::filter_vec_iter(&input, 4..=12, &mut output)));
     group.bench_function("scalar_forloop", |b| b.iter(|| filter_vec::filter_vec_scalar(&input, 4..=12, &mut output)));
     group.bench_function("scalar_nobranch", |b| b.iter(|| filter_vec::filter_vec_nobranch(&input, 4..=12, &mut output)));

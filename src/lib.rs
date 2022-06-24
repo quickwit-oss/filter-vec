@@ -24,9 +24,9 @@ use std::ops::RangeInclusive;
 pub fn filter_vec_scalar(input: &[u32], range: RangeInclusive<u32>, output: &mut Vec<u32>) {
     output.clear();
     output.reserve(input.len());
-    for (id, &el) in input.iter().enumerate() {
-        if range.contains(&el) {
-            output.push(id as u32);
+    for i in 0..input.len() {
+        if range.contains(&input[i]) {
+            output.push(i as u32);
         }
     }
 }
@@ -54,9 +54,8 @@ pub fn filter_vec_iter(input: &[u32], range: RangeInclusive<u32>, output: &mut V
     output.extend(
         input
             .iter()
-            .cloned()
             .enumerate()
-            .filter(|&(_, el)| range.contains(&el))
+            .filter(|&(_, el)| range.contains(el))
             .map(|(id, _)| id as u32),
     );
 }
@@ -91,10 +90,10 @@ mod tests {
             filter_vec_iter(&v[..], interval.clone(), &mut output);
             assert_eq!(&output[..], &expected);
         }
-       {
-            let mut output = Vec::new();
-            super::avx512::filter_vec(&v[..], interval.clone(), &mut output);
-            assert_eq!(&output[..], &expected);
-        }
+    //    {
+    //         let mut output = Vec::new();
+    //         super::avx512::filter_vec(&v[..], interval.clone(), &mut output);
+    //         assert_eq!(&output[..], &expected);
+    //     }
     }
 }
