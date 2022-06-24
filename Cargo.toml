@@ -1,0 +1,15 @@
+[package]
+name = "filter-vec"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+unroll = "0.1"
+
+[dev-dependencies]
+criterion = "0.3"
+rand = "0.8"
+
+[[bench]]
+name = "benchmark"
+harness = false
